@@ -32,6 +32,7 @@ async def moderate_text(
             content_hash=content_hash,
             status="pending"
         )
+
         db.add(moderation_request)
         db.commit()
         db.refresh(moderation_request)
@@ -47,6 +48,7 @@ async def moderate_text(
             reasoning=analysis_result["reasoning"],
             llm_response=analysis_result["llm_response"]
         )
+        
         db.add(moderation_result)
 
         # Update request status

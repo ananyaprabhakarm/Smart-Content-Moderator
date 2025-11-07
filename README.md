@@ -180,23 +180,39 @@ Baya-Task/
 └── README.md
 ```
 
-## Extending the Service
+## AI-Powered Moderation
 
-The current implementation uses basic keyword matching for text and image validation. To integrate with AI-powered moderation services:
+### Image Moderation with CLIP
+The image moderation service uses **OpenAI's CLIP** (Contrastive Language-Image Pre-training) model for zero-shot classification. CLIP compares images against text descriptions of inappropriate and appropriate content categories.
+
+**Features:**
+- Zero-shot classification (no training required)
+- Analyzes images against 10+ inappropriate content categories
+- Provides confidence scores and detailed reasoning
+- Supports multiple image formats (JPEG, PNG, GIF, WebP)
+
+**Content Categories Detected:**
+- Violent content & graphic violence
+- Explicit sexual content & nudity
+- Hate symbols & offensive gestures
+- Weapons, blood and gore
+- Drug use & self-harm
 
 ### Text Moderation
+The current text moderation uses basic keyword matching. You can enhance it with:
 - OpenAI Moderation API
 - Google Perspective API
 - Azure Content Moderator
 - Custom LLM (Claude, GPT-4, etc.)
 
-### Image Moderation
-- AWS Rekognition
+### Extending Image Moderation
+While CLIP provides powerful zero-shot classification, you can also integrate:
+- AWS Rekognition (more comprehensive detection)
 - Google Cloud Vision API
 - Azure Computer Vision
-- Custom ML models
+- Custom trained models for specific use cases
 
-Update the `src/services/moderation_service.py` file to integrate these services.
+Update the [src/services/moderation_service.py](src/services/moderation_service.py) file to customize categories or integrate additional services.
 
 ## License
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from src.database.connection import get_db
-from src.schemas.moderation import TextModerationRequest, ModerationResponse
-from src.models.moderation import ModerationRequest, ModerationResult
-from src.services.moderation_service import ModerationService
+from database.connection import get_db
+from schemas.moderation import TextModerationRequest, ModerationResponse
+from models.moderation import ModerationRequest, ModerationResult
+from services.moderation_service import ModerationService
 
 router = APIRouter(prefix="/api/text", tags=["Text Moderation"])
 

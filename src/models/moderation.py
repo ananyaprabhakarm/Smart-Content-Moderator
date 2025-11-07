@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from src.database.connection import Base
+from database.connection import Base
 
 
 class ModerationRequest(Base):

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from src.database.connection import get_db
-from src.schemas.moderation import ModerationResponse
-from src.models.moderation import ModerationRequest, ModerationResult
-from src.services.moderation_service import ModerationService
+from database.connection import get_db
+from schemas.moderation import ModerationResponse
+from models.moderation import ModerationRequest, ModerationResult
+from services.moderation_service import ModerationService
 from typing import Optional
 
 router = APIRouter(prefix="/api/image", tags=["Image Moderation"])

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from src.database.connection import get_db
-from src.schemas.moderation import AnalysisSummaryResponse, AnalysisSummaryListResponse, ModerationResultDetail
-from src.models.moderation import ModerationRequest, ModerationResult
+from database.connection import get_db
+from schemas.moderation import AnalysisSummaryResponse, AnalysisSummaryListResponse, ModerationResultDetail
+from models.moderation import ModerationRequest, ModerationResult
 from typing import Optional
 
 router = APIRouter(prefix="/api/summary", tags=["Analysis Summary"])

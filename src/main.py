@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.database.connection import init_db
-from src.api import text_moderation, image_moderation, summary
+from database.connection import init_db
+from api import text_moderation, image_moderation, summary
 
 # Initialize FastAPI app
 app = FastAPI(

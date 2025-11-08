@@ -28,9 +28,9 @@ async def moderate_text(
 
         # Create moderation request
         moderation_request = ModerationRequest(
-            content_type="text",
-            content_hash=content_hash,
-            status="pending"
+            content_type = 'text',
+            content_hash = content_hash,
+            status = 'pending'
         )
 
         db.add(moderation_request)

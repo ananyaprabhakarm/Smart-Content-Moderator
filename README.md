@@ -182,60 +182,120 @@ Baya-Task/
 
 ## AI-Powered Moderation
 
-This service uses **OpenAI's omni-moderation-latest** model for both text and image content moderation. This is OpenAI's latest multimodal moderation model that provides state-of-the-art detection of inappropriate content.
+This service uses **Google Vertex AI with Gemini models** for both text and image content moderation. Gemini is Google's latest multimodal AI that provides powerful content safety analysis with built-in safety ratings.
 
 ### Features
 
-**Unified Moderation API:**
-- Single model for both text and images
-- Real-time API-based analysis (no local model hosting required)
-- Production-ready with high accuracy
-- Detailed category-level scores and reasoning
+**Vertex AI Gemini Moderation:**
+- **Multimodal Analysis**: Single model (Gemini 1.5 Flash) handles both text and images
+- **Built-in Safety Ratings**: Automatic safety assessments across multiple harm categories
+- **No Local Hosting**: Cloud-based API (no GPU or model hosting required)
+- **Production-Ready**: Enterprise-grade reliability with Google Cloud infrastructure
+- **Detailed Reasoning**: AI-generated explanations for moderation decisions
 
-**Content Categories Detected:**
-The omni-moderation-latest model detects the following categories:
-- **Sexual content**: Sexual descriptions or explicit material
-- **Hate speech**: Content promoting hate based on identity
-- **Harassment**: Bullying, threatening, or harassing content
-- **Self-harm**: Content promoting self-harm or suicide
-- **Sexual/minors**: Sexual content involving minors
-- **Hate/threatening**: Hateful content with violence threats
-- **Violence/graphic**: Graphic depictions of violence
-- **Self-harm/intent**: Content showing intent to self-harm
-- **Self-harm/instructions**: Instructions for self-harm
-- **Harassment/threatening**: Harassing content with threats
-- **Violence**: General violent content
+**Safety Categories Detected:**
+Gemini's safety filters detect the following harm categories:
+- **Hate Speech**: Content promoting hate or discrimination based on identity
+- **Harassment**: Bullying, intimidating, or threatening behavior
+- **Dangerous Content**: Content promoting harmful or dangerous activities
+- **Sexually Explicit**: Adult or sexually suggestive material
+
+**Probability Levels:**
+- NEGLIGIBLE (0.1): Very unlikely to be harmful
+- LOW (0.3): Low probability of harm
+- MEDIUM (0.6): Moderate probability of harm - flagged
+- HIGH (0.9): High probability of harm - flagged
 
 **Image Analysis:**
 - Supports JPEG, PNG, GIF, WebP formats
-- Base64 encoding for secure transmission
-- Analyzes visual content for all moderation categories
-- Provides detailed scores per category
+- Multimodal understanding (visual + text context)
+- Analyzes visual content for all safety categories
+- Provides probability scores per category
 
 **Text Analysis:**
-- Multi-language support
-- Context-aware analysis
-- Fine-grained category scoring
-- Policy violation detection
+- Multi-language support (100+ languages)
+- Context-aware safety assessment
+- Fine-grained probability scoring
+- AI-powered reasoning and explanations
 
 ### Setup
 
-**Required: OpenAI API Key**
+**Required: Google Cloud Project with Vertex AI**
 
-1. Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
-2. Copy `.env.example` to `.env`
-3. Add your API key to the `.env` file:
+#### 1. Create Google Cloud Project
+
 ```bash
-OPENAI_API_KEY=your_actual_api_key_here
+# Install Google Cloud CLI (if not already installed)
+# Visit: https://cloud.google.com/sdk/docs/install
+
+# Create a new project (or use existing)
+gcloud projects create your-project-id
+gcloud config set project your-project-id
+
+# Enable Vertex AI API
+gcloud services enable aiplatform.googleapis.com
 ```
+
+#### 2. Set Up Authentication
+
+**Option A: Service Account (Recommended for production)**
+```bash
+# Create service account
+gcloud iam service-accounts create content-moderator \
+    --display-name="Content Moderation Service"
+
+# Grant necessary permissions
+gcloud projects add-iam-policy-binding your-project-id \
+    --member="serviceAccount:content-moderator@your-project-id.iam.gserviceaccount.com" \
+    --role="roles/aiplatform.user"
+
+# Create and download key
+gcloud iam service-accounts keys create ~/service-account-key.json \
+    --iam-account=content-moderator@your-project-id.iam.gserviceaccount.com
+```
+
+**Option B: Application Default Credentials (Development)**
+```bash
+gcloud auth application-default login
+```
+
+#### 3. Configure Environment
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env file with your configuration
+```
+
+Add to `.env`:
+```bash
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=us-central1
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json  # If using service account
+```
+
+#### 4. Test Connection
+
+```bash
+# Run the test script
+python test_vertexai_api.py
+```
+
+### Cost Considerations
+
+Vertex AI Gemini pricing (as of 2024):
+- **Gemini 1.5 Flash**: $0.00001875 per 1K characters (input)
+- Very affordable for content moderation use cases
+- First 1000 requests per month are free
 
 ### Extending the Service
 
-The current implementation uses OpenAI's omni-moderation-latest. You can extend or replace it with:
+The current implementation uses Vertex AI Gemini. You can extend or replace it with:
 - **AWS Rekognition**: Enterprise-level content moderation
-- **Google Cloud Vision API**: Image safety detection
 - **Azure Content Moderator**: Microsoft's moderation service
-- **Custom models**: Train your own models for specific use cases
+- **OpenAI Moderation API**: Alternative AI-based moderation
+- **Custom models**: Deploy your own models on Vertex AI
 
 Update [src/services/moderation_service.py](src/services/moderation_service.py) to integrate additional services or customize the moderation logic.
 

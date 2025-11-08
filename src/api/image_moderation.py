@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/image", tags=["Image Moderation"])
 async def moderate_image(
     image: UploadFile = File(..., description="Image file to moderate"),
     content_id: Optional[str] = Form(None, description="Optional identifier for the content"),
+    user_email: Optional[str] = Form(None, description="Email of the user submitting the content"),
     db: Session = Depends(get_db)
 ):
     """
@@ -46,6 +47,7 @@ async def moderate_image(
         moderation_request = ModerationRequest(
             content_type="image",
             content_hash=content_hash,
+            user_email=user_email,
             status="pending"
         )
         db.add(moderation_request)

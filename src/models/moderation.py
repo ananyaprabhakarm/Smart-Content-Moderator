@@ -10,6 +10,7 @@ class ModerationRequest(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     content_type = Column(String(50), nullable=False)  # 'text' or 'image'
     content_hash = Column(String(255), nullable=False, index=True)
+    user_email = Column(String(255), nullable=True, index=True)  # Email of the user submitting the content
     status = Column(String(50), nullable=False, default="pending")  # pending, completed, failed
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

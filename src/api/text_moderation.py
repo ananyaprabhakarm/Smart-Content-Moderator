@@ -32,6 +32,7 @@ async def moderate_text(
         moderation_request = ModerationRequest(
             content_type = 'text',
             content_hash = content_hash,
+            user_email = request.user_email,
             status = 'pending'
         )
 

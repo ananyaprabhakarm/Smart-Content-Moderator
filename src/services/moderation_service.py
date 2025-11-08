@@ -5,14 +5,13 @@ from typing import Dict, Any
 from PIL import Image
 import io
 import os
-import vertexai
-from vertexai.generative_models import GenerativeModel, Part, SafetySetting, HarmCategory, HarmBlockThreshold
+import google.generativeai as genai
 
 
 class ModerationService:
-    """Service for content moderation analysis using Google Vertex AI Gemini"""
+    """Service for content moderation analysis using Google Gemini API"""
 
-    # Initialize Vertex AI
+    # Initialize Gemini API
     _initialized = False
 
     # Safety categories mapping
@@ -32,18 +31,17 @@ class ModerationService:
     }
 
     @classmethod
-    def initialize_vertex_ai(cls):
-        """Initialize Vertex AI with project credentials"""
+    def initialize_gemini(cls):
+        """Initialize Gemini API with API key"""
         if not cls._initialized:
-            project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
-            location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+            api_key = os.getenv("GOOGLE_API_KEY")
 
-            if not project_id:
-                raise ValueError("GOOGLE_CLOUD_PROJECT environment variable is not set")
+            if not api_key:
+                raise ValueError("GOOGLE_API_KEY environment variable is not set")
 
-            vertexai.init(project=project_id, location=location)
+            genai.configure(api_key=api_key)
             cls._initialized = True
-            print(f"✓ Vertex AI initialized (project: {project_id}, location: {location})")
+            print(f"✓ Gemini API initialized")
 
     @staticmethod
     def generate_content_hash(content: str) -> str:
@@ -58,17 +56,17 @@ class ModerationService:
     @classmethod
     def analyze_text(cls, text: str) -> Dict[str, Any]:
         """
-        Analyze text content for inappropriate material using Vertex AI Gemini.
+        Analyze text content for inappropriate material using Google Gemini API.
 
         Uses Google's Gemini model with safety filters to detect harmful content
         across multiple categories including hate speech, harassment, dangerous
         content, and sexually explicit material.
         """
         try:
-            cls.initialize_vertex_ai()
+            cls.initialize_gemini()
 
             # Initialize Gemini model
-            model = GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-flash-latest")
 
             # Create moderation prompt
             moderation_prompt = f"""Analyze the following text for inappropriate content.
@@ -87,15 +85,18 @@ Respond with a JSON object containing:
 - "reasoning": brief explanation of your assessment
 """
 
-            # Generate response with safety settings
+            # Set safety settings to BLOCK_NONE to get ratings without blocking
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            ]
+
+            # Generate response
             response = model.generate_content(
                 moderation_prompt,
-                safety_settings={
-                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                }
+                safety_settings=safety_settings
             )
 
             # Extract safety ratings
@@ -105,7 +106,10 @@ Respond with a JSON object containing:
 
             if hasattr(response, 'candidates') and response.candidates:
                 for rating in response.candidates[0].safety_ratings:
-                    category_name = cls.HARM_CATEGORIES.get(rating.category.name, rating.category.name)
+                    category_name = cls.HARM_CATEGORIES.get(
+                        rating.category.name,
+                        rating.category.name
+                    )
                     probability = rating.probability.name
                     score = cls.HARM_PROBABILITY_SCORES.get(probability, 0.0)
 
@@ -124,7 +128,7 @@ Respond with a JSON object containing:
             gemini_analysis = ""
             is_appropriate_by_content = True
 
-            if hasattr(response, 'text'):
+            if hasattr(response, 'text') and response.text:
                 gemini_analysis = response.text
                 # Simple heuristic: if Gemini response mentions problems
                 if any(word in gemini_analysis.lower() for word in ["inappropriate", "problematic", "flagged", "harmful"]):
@@ -145,7 +149,7 @@ Respond with a JSON object containing:
                 reasoning = "Gemini analysis indicates appropriate content. No safety concerns detected."
 
             llm_response = json.dumps({
-                "model": "gemini-1.5-flash",
+                "model": "gemini-flash-latest",
                 "safety_ratings": safety_ratings,
                 "flagged_categories": flagged_categories,
                 "gemini_analysis": gemini_analysis[:500],  # Truncate for storage
@@ -170,13 +174,13 @@ Respond with a JSON object containing:
     @classmethod
     def analyze_image(cls, image_bytes: bytes) -> Dict[str, Any]:
         """
-        Analyze image content for inappropriate material using Vertex AI Gemini.
+        Analyze image content for inappropriate material using Google Gemini API.
 
         Uses Google's Gemini multimodal model with safety filters to detect
         harmful visual content across multiple categories.
         """
         try:
-            cls.initialize_vertex_ai()
+            cls.initialize_gemini()
 
             # Open and validate image
             image = Image.open(io.BytesIO(image_bytes))
@@ -192,14 +196,11 @@ Respond with a JSON object containing:
             image.save(img_byte_arr, format='PNG')
             img_byte_arr = img_byte_arr.getvalue()
 
-            # Encode to base64
-            base64_image = base64.b64encode(img_byte_arr).decode('utf-8')
-
             # Initialize Gemini model
-            model = GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-flash-latest")
 
-            # Create image part
-            image_part = Part.from_data(img_byte_arr, mime_type="image/png")
+            # Upload image
+            uploaded_file = genai.upload_file(io.BytesIO(img_byte_arr), mime_type="image/png")
 
             # Create moderation prompt for image
             moderation_prompt = """Analyze this image for inappropriate content.
@@ -216,15 +217,18 @@ Provide a JSON response with:
 - "reasoning": brief explanation
 """
 
-            # Generate response with safety settings
+            # Set safety settings
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+            ]
+
+            # Generate response
             response = model.generate_content(
-                [image_part, moderation_prompt],
-                safety_settings={
-                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                }
+                [uploaded_file, moderation_prompt],
+                safety_settings=safety_settings
             )
 
             # Extract safety ratings
@@ -234,7 +238,10 @@ Provide a JSON response with:
 
             if hasattr(response, 'candidates') and response.candidates:
                 for rating in response.candidates[0].safety_ratings:
-                    category_name = cls.HARM_CATEGORIES.get(rating.category.name, rating.category.name)
+                    category_name = cls.HARM_CATEGORIES.get(
+                        rating.category.name,
+                        rating.category.name
+                    )
                     probability = rating.probability.name
                     score = cls.HARM_PROBABILITY_SCORES.get(probability, 0.0)
 
@@ -253,7 +260,7 @@ Provide a JSON response with:
             gemini_analysis = ""
             is_appropriate_by_content = True
 
-            if hasattr(response, 'text'):
+            if hasattr(response, 'text') and response.text:
                 gemini_analysis = response.text
                 if any(word in gemini_analysis.lower() for word in ["inappropriate", "problematic", "flagged", "harmful"]):
                     is_appropriate_by_content = False
@@ -273,13 +280,19 @@ Provide a JSON response with:
                 reasoning = "Gemini analysis indicates appropriate image content. No safety concerns detected."
 
             llm_response = json.dumps({
-                "model": "gemini-1.5-flash",
+                "model": "gemini-flash-latest",
                 "safety_ratings": safety_ratings,
                 "flagged_categories": flagged_categories,
                 "gemini_analysis": gemini_analysis[:500],
                 "dimensions": {"width": width, "height": height},
                 "format": format_type
             })
+
+            # Clean up uploaded file
+            try:
+                genai.delete_file(uploaded_file.name)
+            except:
+                pass  # Ignore cleanup errors
 
             return {
                 "classification": classification,

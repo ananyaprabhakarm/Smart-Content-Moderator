@@ -182,15 +182,16 @@ Baya-Task/
 
 ## AI-Powered Moderation
 
-This service uses **Google Vertex AI with Gemini models** for both text and image content moderation. Gemini is Google's latest multimodal AI that provides powerful content safety analysis with built-in safety ratings.
+This service uses **Google Gemini API** for both text and image content moderation. Gemini is Google's latest multimodal AI that provides powerful content safety analysis with built-in safety ratings - and it's **FREE** to use!
 
 ### Features
 
-**Vertex AI Gemini Moderation:**
-- **Multimodal Analysis**: Single model (Gemini 1.5 Flash) handles both text and images
+**Gemini API Moderation:**
+- **100% FREE Tier**: 60 requests/min, 1,500 requests/day - No credit card required!
+- **Multimodal Analysis**: Single model (Gemini Flash Latest) handles both text and images
 - **Built-in Safety Ratings**: Automatic safety assessments across multiple harm categories
+- **Super Simple Setup**: Just need an API key (no Google Cloud project required)
 - **No Local Hosting**: Cloud-based API (no GPU or model hosting required)
-- **Production-Ready**: Enterprise-grade reliability with Google Cloud infrastructure
 - **Detailed Reasoning**: AI-generated explanations for moderation decisions
 
 **Safety Categories Detected:**
@@ -218,84 +219,62 @@ Gemini's safety filters detect the following harm categories:
 - Fine-grained probability scoring
 - AI-powered reasoning and explanations
 
-### Setup
+### Setup (Super Simple!)
 
-**Required: Google Cloud Project with Vertex AI**
+#### 1. Get Your FREE Gemini API Key
 
-#### 1. Create Google Cloud Project
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click "Create API Key"
+4. Copy the API key
 
-```bash
-# Install Google Cloud CLI (if not already installed)
-# Visit: https://cloud.google.com/sdk/docs/install
+**That's it! No credit card, no complex setup required!**
 
-# Create a new project (or use existing)
-gcloud projects create your-project-id
-gcloud config set project your-project-id
-
-# Enable Vertex AI API
-gcloud services enable aiplatform.googleapis.com
-```
-
-#### 2. Set Up Authentication
-
-**Option A: Service Account (Recommended for production)**
-```bash
-# Create service account
-gcloud iam service-accounts create content-moderator \
-    --display-name="Content Moderation Service"
-
-# Grant necessary permissions
-gcloud projects add-iam-policy-binding your-project-id \
-    --member="serviceAccount:content-moderator@your-project-id.iam.gserviceaccount.com" \
-    --role="roles/aiplatform.user"
-
-# Create and download key
-gcloud iam service-accounts keys create ~/service-account-key.json \
-    --iam-account=content-moderator@your-project-id.iam.gserviceaccount.com
-```
-
-**Option B: Application Default Credentials (Development)**
-```bash
-gcloud auth application-default login
-```
-
-#### 3. Configure Environment
+#### 2. Configure Environment
 
 ```bash
 # Copy environment template
 cp .env.example .env
 
-# Edit .env file with your configuration
+# Edit .env file and add your API key
 ```
 
 Add to `.env`:
 ```bash
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json  # If using service account
+GOOGLE_API_KEY=your-actual-api-key-here
 ```
 
-#### 4. Test Connection
+#### 3. Test Connection
 
 ```bash
 # Run the test script
-python test_vertexai_api.py
+python test_gemini_api.py
 ```
 
-### Cost Considerations
+If you see ✅ success messages, you're ready to go!
 
-Vertex AI Gemini pricing (as of 2024):
-- **Gemini 1.5 Flash**: $0.00001875 per 1K characters (input)
-- Very affordable for content moderation use cases
-- First 1000 requests per month are free
+### Free Tier Limits
+
+**Gemini API Free Tier (Generous!):**
+- **60 requests per minute**
+- **1,500 requests per day**
+- **No credit card required**
+- **No expiration** - free forever for this tier
+
+Perfect for:
+- Development and testing
+- Small to medium websites
+- Personal projects
+- Proof of concepts
 
 ### Extending the Service
 
-The current implementation uses Vertex AI Gemini. You can extend or replace it with:
+The current implementation uses Gemini API. You can extend or replace it with:
+- **Google Vertex AI**: Enterprise version with higher limits (requires Google Cloud)
+- **OpenAI Moderation API**: Alternative AI-based moderation
 - **AWS Rekognition**: Enterprise-level content moderation
 - **Azure Content Moderator**: Microsoft's moderation service
-- **OpenAI Moderation API**: Alternative AI-based moderation
-- **Custom models**: Deploy your own models on Vertex AI
+- **Custom models**: Train your own models
 
 Update [src/services/moderation_service.py](src/services/moderation_service.py) to integrate additional services or customize the moderation logic.
 

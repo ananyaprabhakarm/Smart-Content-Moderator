@@ -182,37 +182,62 @@ Baya-Task/
 
 ## AI-Powered Moderation
 
-### Image Moderation with CLIP
-The image moderation service uses **OpenAI's CLIP** (Contrastive Language-Image Pre-training) model for zero-shot classification. CLIP compares images against text descriptions of inappropriate and appropriate content categories.
+This service uses **OpenAI's omni-moderation-latest** model for both text and image content moderation. This is OpenAI's latest multimodal moderation model that provides state-of-the-art detection of inappropriate content.
 
-**Features:**
-- Zero-shot classification (no training required)
-- Analyzes images against 10+ inappropriate content categories
-- Provides confidence scores and detailed reasoning
-- Supports multiple image formats (JPEG, PNG, GIF, WebP)
+### Features
+
+**Unified Moderation API:**
+- Single model for both text and images
+- Real-time API-based analysis (no local model hosting required)
+- Production-ready with high accuracy
+- Detailed category-level scores and reasoning
 
 **Content Categories Detected:**
-- Violent content & graphic violence
-- Explicit sexual content & nudity
-- Hate symbols & offensive gestures
-- Weapons, blood and gore
-- Drug use & self-harm
+The omni-moderation-latest model detects the following categories:
+- **Sexual content**: Sexual descriptions or explicit material
+- **Hate speech**: Content promoting hate based on identity
+- **Harassment**: Bullying, threatening, or harassing content
+- **Self-harm**: Content promoting self-harm or suicide
+- **Sexual/minors**: Sexual content involving minors
+- **Hate/threatening**: Hateful content with violence threats
+- **Violence/graphic**: Graphic depictions of violence
+- **Self-harm/intent**: Content showing intent to self-harm
+- **Self-harm/instructions**: Instructions for self-harm
+- **Harassment/threatening**: Harassing content with threats
+- **Violence**: General violent content
 
-### Text Moderation
-The current text moderation uses basic keyword matching. You can enhance it with:
-- OpenAI Moderation API
-- Google Perspective API
-- Azure Content Moderator
-- Custom LLM (Claude, GPT-4, etc.)
+**Image Analysis:**
+- Supports JPEG, PNG, GIF, WebP formats
+- Base64 encoding for secure transmission
+- Analyzes visual content for all moderation categories
+- Provides detailed scores per category
 
-### Extending Image Moderation
-While CLIP provides powerful zero-shot classification, you can also integrate:
-- AWS Rekognition (more comprehensive detection)
-- Google Cloud Vision API
-- Azure Computer Vision
-- Custom trained models for specific use cases
+**Text Analysis:**
+- Multi-language support
+- Context-aware analysis
+- Fine-grained category scoring
+- Policy violation detection
 
-Update the [src/services/moderation_service.py](src/services/moderation_service.py) file to customize categories or integrate additional services.
+### Setup
+
+**Required: OpenAI API Key**
+
+1. Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Copy `.env.example` to `.env`
+3. Add your API key to the `.env` file:
+```bash
+OPENAI_API_KEY=your_actual_api_key_here
+```
+
+### Extending the Service
+
+The current implementation uses OpenAI's omni-moderation-latest. You can extend or replace it with:
+- **AWS Rekognition**: Enterprise-level content moderation
+- **Google Cloud Vision API**: Image safety detection
+- **Azure Content Moderator**: Microsoft's moderation service
+- **Custom models**: Train your own models for specific use cases
+
+Update [src/services/moderation_service.py](src/services/moderation_service.py) to integrate additional services or customize the moderation logic.
 
 ## License
 
